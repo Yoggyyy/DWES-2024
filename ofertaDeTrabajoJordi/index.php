@@ -48,36 +48,102 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     if (!preg_match($fecha_pattern, $_POST['date'])) {
         $errors['date'] = 'La fecha debe tener el formato AAAA-MM-DD.';
     }
+    if (!empty($_FILES)) {
 
-    //Comprueb si se produjo algun error al subir el archivo
-    // UPLOAD_ERR_OK= 0 
-    // Si $_FILES['photo']['error']
-    if ($_FILES['photo']['error'] != UPLOAD_ERR_OK) {
-        switch ($_FILES['photo']['error']) {
-            case UPLOAD_ERR_INI_SIZE:
-            case UPLOAD_ERR_FORM_SIZE:
-                $errors['photo'] = 'El fichero es demasiado grande.';
-                break;
-            case UPLOAD_ERR_PARTIAL: 
-                $errors['photo'] = 'El fichero no se ha podido subir entero.';
-                break;
-            case UPLOAD_ERR_NO_FILE:
-                $errors['photo'] = 'No se ha podido subir el fichero.';
-                break;
-            default:
-                $errors['photo'] = 'Error indeterminado con la imagen.';
-                break;
+        //Comprueb si se produjo algun error al subir el archivo photo 
+        // UPLOAD_ERR_OK= 0 
+        // Si $_FILES['photo']['error']
+        if ($_FILES['photo']['error'] != UPLOAD_ERR_OK) {
+            switch ($_FILES['photo']['error']) {
+                case UPLOAD_ERR_INI_SIZE:
+                case UPLOAD_ERR_FORM_SIZE:
+                    $errors['photo'] = 'El fichero es demasiado grande.';
+                    break;
+                case UPLOAD_ERR_PARTIAL: 
+                    $errors['photo'] = 'El fichero no se ha podido subir entero.';
+                    break;
+                case UPLOAD_ERR_NO_FILE:
+                    $errors['photo'] = 'No se ha podido subir el fichero.';
+                    break;
+                default:
+                    $errors['photo'] = 'Error indeterminado con la imagen.';
+                    break;
+            }
         }
+    
+        // si no hubo error se comprueba que el archivo sea del tipo requerido
+        if ($_FILES['photo']['type'] != 'image/jpeg') {
+            $errors['photo'] = 'No se trata de un fichero .jpg/.jpeg';
+        }
+    
+        // Si no hay errores en lo anterior se comprueba si el archivo es uno
+        // recién subido al servidor (medida de seguridad)
+    
+        if (is_uploaded_file($_FILES['photo']['tm_name']) === true) {
+            // En ocasiones ya existe el archivo para no sobrescribirlo hacemos
+            // la siguiente comprobacion
+            $nuevaRuta = './imagenes/candidates/' . $_FILES['photo']['name'];
+            if (is_file($nuevaRuta) === true) {
+                echo 'Error: Ya existe un archivo con el mismo nombre';
+                exit();
+            }
+    
+            // Movemos el fichero desde el directorio temporal al final
+            if(!move_uploaded_file($_FILES['photo']['tmp_name'], $nuevaRuta)) {
+                echo 'Error: No se puede mover el fichero a su destino';
+            }
+    
+        } 
+
+        //Comprueb si se produjo algun error al subir el archivo cv 
+        // UPLOAD_ERR_OK= 0 
+        // Si $_FILES['cv']['error']
+        if ($_FILES['cv']['error'] != UPLOAD_ERR_OK) {
+            switch ($_FILES['cv']['error']) {
+                case UPLOAD_ERR_INI_SIZE:
+                case UPLOAD_ERR_FORM_SIZE:
+                    $errors['cv'] = 'El fichero es demasiado grande.';
+                    break;
+                case UPLOAD_ERR_PARTIAL: 
+                    $errors['cv'] = 'El fichero no se ha podido subir entero.';
+                    break;
+                case UPLOAD_ERR_NO_FILE:
+                    $errors['cv'] = 'No se ha podido subir el fichero.';
+                    break;
+                default:
+                    $errors['cv'] = 'Error indeterminado con el cv.';
+                    break;
+            }
+        }
+    
+        // si no hubo error se comprueba que el archivo sea del tipo requerido
+        if ($_FILES['cv']['type'] != 'application/pdf') {
+            $errors['cv'] = 'No se trata de un fichero .pdf';
+        }
+    
+        // Si no hay errores en lo anterior se comprueba si el archivo es uno
+        // recién subido al servidor (medida de seguridad)
+    
+        if (is_uploaded_file($_FILES['cv']['tm_name']) === true) {
+            // En ocasiones ya existe el archivo para no sobrescribirlo hacemos
+            // la siguiente comprobacion
+            $nuevaRuta = './cvs/' . $_POST['dni'] . '.pdf';
+            if (is_file($nuevaRuta) === true) {
+                echo 'Error: Ya existe un archivo con el mismo nombre';
+                
+            }
+    
+            // Movemos el fichero desde el directorio temporal al final
+            if(!move_uploaded_file($_FILES['cv']['tmp_name'], $nuevaRuta)) {
+                echo 'Error: No se puede mover el fichero a su destino';
+            }
+    
+        }
+        
     }
-
-    // si no hubo error se comprueba que el archivo sea del tipo requerido
-    if ($_FILES['photo']['type'] != 'image/jpeg') {
-        $errors['photo'] = 'No se trata de un fichero .jpg/.jpeg';
-    }
-
-
 
     // Si no hay errores, ocultar el formulario y mostrar mensaje
+    // Esto esta mal tiene q ir dentro del html y no de esta manera 
     if (empty($errors)) {
         echo "<h1>Solicitud registrada correctamente</h1>";
         echo "<a href='/index.php'>Volver al formulario</a>";
@@ -92,7 +158,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Formulario Recursivo Tienda</title>
+    <title>Formulario Recursivo CV</title>
     <link rel="stylesheet" href="/css/styles.css">
 </head>
 
